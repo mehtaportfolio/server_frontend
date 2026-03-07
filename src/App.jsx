@@ -244,26 +244,113 @@ function App() {
     <div className={`min-h-screen transition-colors duration-500 selection:bg-indigo-500/30 overflow-x-hidden font-sans ${
       isLight ? 'bg-slate-50 text-slate-900' : 'bg-[#020205] text-slate-100'
     }`}>
-      <div className="fixed top-8 left-6 z-50">
-        <button
-          onClick={togglePush}
-          disabled={pushLoading}
-          className={`p-3 rounded-2xl transition-all active:scale-95 border ${
-            isLight 
-              ? 'bg-white border-black/10 text-slate-600 shadow-sm hover:bg-slate-50' 
-              : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
-          } ${pushEnabled ? 'text-indigo-500' : ''}`}
-          title={pushEnabled ? "Disable Notifications" : "Enable Notifications"}
-        >
-          {pushLoading ? (
-            <Loader2 size={20} className="animate-spin" />
-          ) : pushEnabled ? (
-            <BellOff size={20} />
-          ) : (
-            <Bell size={20} />
-          )}
-        </button>
+      {/* Top Navigation & Header */}
+      <div className="fixed top-8 left-0 right-0 z-50 flex flex-col items-center pointer-events-none">
+        <div className="w-full px-6 flex justify-between items-center pointer-events-auto">
+          {/* Left Controls */}
+          <div className="flex gap-3">
+            <button
+              onClick={handleRestartMaster}
+              className={`w-11 h-11 rounded-2xl transition-all active:scale-95 border flex items-center justify-center font-black text-sm ${
+                isLight 
+                  ? 'bg-white border-black/10 text-slate-600 shadow-sm hover:bg-slate-50' 
+                  : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
+              }`}
+              title="Restart Master Backend"
+            >
+              M
+            </button>
+            <button
+              onClick={togglePush}
+              disabled={pushLoading}
+              className={`p-3 rounded-2xl transition-all active:scale-95 border ${
+                isLight 
+                  ? 'bg-white border-black/10 text-slate-600 shadow-sm hover:bg-slate-50' 
+                  : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
+              } ${pushEnabled ? 'text-indigo-500' : ''}`}
+              title={pushEnabled ? "Disable Notifications" : "Enable Notifications"}
+            >
+              {pushLoading ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : pushEnabled ? (
+                <BellOff size={20} />
+              ) : (
+                <Bell size={20} />
+              )}
+            </button>
+            <button
+              onClick={fetchServices}
+              className={`p-3 rounded-2xl transition-all active:scale-95 border ${
+                isLight 
+                  ? 'bg-white border-black/10 text-slate-400 hover:bg-slate-50 shadow-sm' 
+                  : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
+              }`}
+              title="Refresh Services"
+            >
+              <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
+            </button>
+          </div>
+
+          {/* Right Controls */}
+          <div className="flex gap-3">
+            <button
+              onClick={() => setConfirmRestart({ type: 'all', action: activeTab })}
+              className={`p-3 rounded-2xl transition-all active:scale-95 border ${
+                isLight 
+                  ? 'bg-white border-black/10 text-rose-500 shadow-sm hover:bg-slate-50' 
+                  : 'bg-rose-500/5 border-rose-500/10 text-rose-400 hover:bg-rose-500/10'
+              }`}
+              title={activeTab === 'redeploy' ? "Redeploy All" : "Restart All"}
+            >
+              <Power size={20} />
+            </button>
+            <button
+              onClick={toggleTheme}
+              className={`p-3 rounded-2xl transition-all active:scale-95 border ${
+                isLight 
+                  ? 'bg-white border-black/10 text-slate-600 shadow-sm hover:bg-slate-50' 
+                  : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
+              }`}
+            >
+              {theme === 'blank' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
+          </div>
+        </div>
+
+        {/* Header - Row 2 */}
+        <header className="text-center pointer-events-auto mt-4">
+          <h1 className="text-4xl font-black tracking-tight mb-2 italic">
+            <span className={`bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-${isLight ? 'slate-600' : 'white'} to-fuchsia-400`}>
+              CORE-INFRA
+            </span>
+          </h1>
+          <div className="h-1 w-12 bg-indigo-500 mx-auto rounded-full mb-6 opacity-50" />
+          
+          <div className="flex justify-center gap-4">
+            <div className={`px-4 py-2 rounded-2xl border flex items-center gap-2 ${
+              isLight ? 'bg-white border-black/5 shadow-sm' : 'bg-white/5 border-white/5'
+            }`}>
+              <Activity size={12} className="text-indigo-400" />
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Active: {stats.total}</span>
+            </div>
+            <div className={`px-4 py-2 rounded-2xl border flex items-center gap-2 ${
+              isLight ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-emerald-500/5 border-emerald-500/10 text-emerald-400'
+            }`}>
+              <div className="w-1.5 h-1.5 rounded-full bg-current" />
+              <span className="text-[10px] font-black uppercase tracking-widest">Healthy: {stats.healthy}</span>
+            </div>
+            {stats.down > 0 && (
+              <div className={`px-4 py-2 rounded-2xl border flex items-center gap-2 ${
+                isLight ? 'bg-rose-50 border-rose-100 text-rose-600' : 'bg-rose-500/5 border-rose-500/10 text-rose-400'
+              }`}>
+                <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest">Down: {stats.down}</span>
+              </div>
+            )}
+          </div>
+        </header>
       </div>
+
       {/* Confirmation Modal */}
       {confirmRestart && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-md bg-black/40 animate-in fade-in duration-300">
@@ -313,80 +400,9 @@ function App() {
         }`} />
       </div>
 
-      <div className="relative max-w-lg mx-auto px-6 py-12 md:py-20">
-        <div className="fixed top-8 right-6 z-50 flex gap-3">
-          <button
-            onClick={() => setConfirmRestart({ type: 'all', action: activeTab })}
-            className={`p-3 rounded-2xl transition-all active:scale-95 border ${
-              isLight 
-                ? 'bg-white border-black/10 text-rose-500 shadow-sm hover:bg-slate-50' 
-                : 'bg-rose-500/5 border-rose-500/10 text-rose-400 hover:bg-rose-500/10'
-            }`}
-            title={activeTab === 'redeploy' ? "Redeploy All" : "Restart All"}
-          >
-            <Power size={20} />
-          </button>
-          <button
-            onClick={toggleTheme}
-            className={`p-3 rounded-2xl transition-all active:scale-95 border ${
-              isLight 
-                ? 'bg-white border-black/10 text-slate-600 shadow-sm hover:bg-slate-50' 
-                : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'
-            }`}
-          >
-            {theme === 'blank' ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
-        </div>
-
-        <header className="mb-14 text-center">
-          <h1 className="text-4xl font-black tracking-tight mb-2 italic">
-            <span className={`bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-${isLight ? 'slate-600' : 'white'} to-fuchsia-400`}>
-              CORE-INFRA
-            </span>
-          </h1>
-          <div className="h-1 w-12 bg-indigo-500 mx-auto rounded-full mb-6 opacity-50" />
-          
-          {/* Summary Stats */}
-          <div className="flex justify-center gap-4 mb-8">
-            <div className={`px-4 py-2 rounded-2xl border flex items-center gap-2 ${
-              isLight ? 'bg-white border-black/5 shadow-sm' : 'bg-white/5 border-white/5'
-            }`}>
-              <Activity size={12} className="text-indigo-400" />
-              <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Active: {stats.total}</span>
-            </div>
-            <div className={`px-4 py-2 rounded-2xl border flex items-center gap-2 ${
-              isLight ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-emerald-500/5 border-emerald-500/10 text-emerald-400'
-            }`}>
-              <div className="w-1.5 h-1.5 rounded-full bg-current" />
-              <span className="text-[10px] font-black uppercase tracking-widest">Healthy: {stats.healthy}</span>
-            </div>
-            <button
-              onClick={handleRestartMaster}
-              className={`px-4 py-2 rounded-2xl border flex items-center gap-2 transition-all active:scale-95 ${
-                isLight ? 'bg-white border-black/5 text-slate-400 hover:text-indigo-500 hover:bg-slate-50' : 'bg-white/5 border-white/5 text-slate-500 hover:text-indigo-400 hover:bg-white/10'
-              }`}
-              title="Restart Master Backend"
-            >
-              <RotateCcw size={12} />
-              <span className="text-[10px] font-black uppercase tracking-widest">Master</span>
-            </button>
-            {stats.down > 0 && (
-              <div className={`px-4 py-2 rounded-2xl border flex items-center gap-2 ${
-                isLight ? 'bg-rose-50 border-rose-100 text-rose-600' : 'bg-rose-500/5 border-rose-500/10 text-rose-400'
-              }`}>
-                <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Down: {stats.down}</span>
-              </div>
-            )}
-          </div>
-          
-          <p className={`text-sm font-black uppercase tracking-[0.4em] ${
-            isLight ? 'text-slate-400' : 'text-slate-500'
-          }`}>Operations Center</p>
-        </header>
-
+      <div className="relative max-w-lg mx-auto px-6 pt-56 pb-20">
         {/* Tab Switcher */}
-        <div className={`flex p-1 rounded-2xl mb-8 border ${
+        <div className={`flex p-0 rounded-2xl mb-8 border ${
           isLight ? 'bg-slate-100 border-black/5' : 'bg-white/5 border-white/5'
         }`}>
           <button
@@ -515,29 +531,15 @@ function App() {
                   </div>
                 )}
               </button>
-            ))
-          ) : (
-            <div className="col-span-3 text-center py-20 opacity-20">
-              <XCircle size={32} className={`mx-auto mb-4 ${isLight ? 'text-slate-900' : 'text-white'}`} />
-              <p className={`text-[10px] font-black uppercase tracking-widest ${isLight ? 'text-slate-900' : 'text-white'}`}>No Nodes Found</p>
-            </div>
-          )}
+              ))
+            ) : (
+              <div className="col-span-3 text-center py-20 opacity-20">
+                <XCircle size={32} className={`mx-auto mb-4 ${isLight ? 'text-slate-900' : 'text-white'}`} />
+                <p className={`text-[10px] font-black uppercase tracking-widest ${isLight ? 'text-slate-900' : 'text-white'}`}>No Nodes Found</p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-
-        {/* Refresh Global Control */}
-        {!loading && (
-          <button
-            onClick={fetchServices}
-            className={`mt-20 mx-auto block p-4 rounded-full transition-all active:scale-90 border ${
-              isLight 
-                ? 'bg-white border-black/10 text-slate-400 hover:bg-slate-50 shadow-sm' 
-                : 'bg-white/5 border-white/5 text-slate-500 hover:bg-white/10'
-            }`}
-          >
-            <RefreshCw size={20} />
-          </button>
-        )}
       </div>
     </div>
   );
