@@ -13,8 +13,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'icon.svg', 'apple-touch-icon.png', 'icon-192.png', 'icon-512.png'],
       manifest: {
-        name: 'Render Manager',
-        short_name: 'RenderMgr',
+        name: 'Master Server',
+        short_name: 'Server',
         description: 'Control and monitor your Render services',
         theme_color: '#4f46e5',
         background_color: '#ffffff',
