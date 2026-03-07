@@ -1,6 +1,11 @@
-import { precacheAndRoute } from 'workbox-precaching'
+import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching'
+import { clientsClaim } from 'workbox-core'
 
+cleanupOutdatedCaches()
 precacheAndRoute(self.__WB_MANIFEST)
+
+self.skipWaiting()
+clientsClaim()
 
 self.addEventListener('push', (event) => {
   const data = event.data.json()

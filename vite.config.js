@@ -15,7 +15,7 @@ export default defineConfig({
       manifest: {
         name: 'Master Server',
         short_name: 'Server',
-        description: 'Control and monitor your Render services',
+        description: 'Control and monitor your Servers',
         theme_color: '#4f46e5',
         background_color: '#ffffff',
         display: 'standalone',
