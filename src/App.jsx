@@ -1,9 +1,313 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
-import { RefreshCw, CheckCircle, XCircle, Loader2, Moon, Sun, AlertTriangle, Clock, Activity, Power, Bell, BellOff, RotateCcw } from 'lucide-react';
+import { RefreshCw, CheckCircle, XCircle, Loader2, Moon, Sun, AlertTriangle, Clock, Activity, Power, Bell, BellOff, RotateCcw, Lock } from 'lucide-react';
+import { supabase } from './supabase';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
 const API_TOKEN = import.meta.env.VITE_API_AUTH_TOKEN;
+
+// Mobile Login Component
+const MobileLogin = ({ onAuthenticated, isLight }) => {
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [isResetOpen, setIsResetOpen] = useState(false);
+  const [resetSecret, setResetSecret] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState(null);
+  const [resetSuccess, setResetSuccess] = useState(false);
+  const inputRefs = useRef([]);
+
+  const handleChange = (element, index) => {
+    const value = element.value;
+    if (value !== '' && !/^[0-9]$/.test(value)) return;
+
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+
+    // Focus next input
+    if (value !== '' && index < 5) {
+      inputRefs.current[index + 1].focus();
+    }
+  };
+
+  const handleKeyDown = (e, index) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      inputRefs.current[index - 1].focus();
+    }
+  };
+
+  const handlePasswordReset = async (e) => {
+    e.preventDefault();
+    if (!resetSecret || !newPassword) return;
+    if (newPassword.length !== 6) {
+      setResetError('New password must be 6 digits');
+      return;
+    }
+
+    setResetLoading(true);
+    setResetError(null);
+    try {
+      // First verify secret
+      const { data: user, error: fetchError } = await supabase
+        .from('user_master')
+        .select('id')
+        .eq('secret', resetSecret)
+        .single();
+
+      if (fetchError || !user) {
+        setResetError('Invalid secret');
+        return;
+      }
+
+      // Update password
+      const { error: updateError } = await supabase
+        .from('user_master')
+        .update({ master_password: newPassword })
+        .eq('id', user.id);
+
+      if (updateError) {
+        setResetError('Failed to update password');
+      } else {
+        setResetSuccess(true);
+        setTimeout(() => {
+          setIsResetOpen(false);
+          setResetSuccess(false);
+          setResetSecret('');
+          setNewPassword('');
+        }, 2000);
+      }
+    } catch {
+      setResetError('Reset failed');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const verifyPassword = async () => {
+    const password = otp.join('');
+    if (password.length !== 6) return;
+
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('user_master')
+        .select('master_password')
+        .eq('master_password', password)
+        .single();
+
+      if (fetchError || !data) {
+        setError('Incorrect password');
+        setOtp(['', '', '', '', '', '']);
+        inputRefs.current[0].focus();
+      } else {
+        onAuthenticated();
+      }
+    } catch {
+      setError('Verification failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyPasswordRef = useRef(verifyPassword);
+  verifyPasswordRef.current = verifyPassword;
+
+  useEffect(() => {
+    if (otp.every(v => v !== '')) {
+      verifyPasswordRef.current();
+    }
+  }, [otp]);
+
+  return (
+    <div className={`fixed inset-0 z-[200] flex items-center justify-center p-6 overflow-hidden`}>
+      {/* Animated Mesh Background */}
+      <div className={`absolute inset-0 transition-colors duration-1000 ${isLight ? 'bg-[#f5f5f7]' : 'bg-[#000000]'}`}>
+        <div className={`absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] animate-pulse opacity-20 ${isLight ? 'bg-blue-400' : 'bg-blue-600'}`} />
+        <div className={`absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full blur-[120px] animate-pulse opacity-20 delay-700 ${isLight ? 'bg-purple-400' : 'bg-purple-600'}`} />
+      </div>
+
+      <div className={`relative w-full max-w-[420px] transition-all duration-700 ${error ? 'animate-[shake_0.5s_ease-in-out]' : ''}`}>
+        {/* Main Glass Card */}
+        <div className={`relative overflow-hidden rounded-[3.5rem] p-12 backdrop-blur-[40px] border transition-all duration-500 ${
+          isLight 
+            ? 'bg-white/60 border-white/40 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.08)]' 
+            : 'bg-[#1c1c1e]/60 border-white/10 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.6)]'
+        }`}>
+          {/* Top Decorative Element - FaceID Style Scanner */}
+          <div className="absolute top-0 left-0 right-0 h-1 flex justify-center">
+            <div className={`h-full w-24 rounded-b-full transition-all duration-1000 ${
+              loading ? 'bg-blue-500 w-full animate-pulse' : error ? 'bg-rose-500' : 'bg-white/20'
+            }`} />
+          </div>
+
+          <div className="flex flex-col items-center text-center">
+            {/* Unique Biometric Icon */}
+            <div className={`mb-10 relative group`}>
+              <div className={`absolute inset-0 blur-2xl rounded-full transition-all duration-500 opacity-0 group-hover:opacity-40 ${isLight ? 'bg-blue-400' : 'bg-blue-600'}`} />
+              <div 
+                onClick={() => setIsResetOpen(true)}
+                className={`relative p-8 rounded-[2.5rem] transition-all duration-500 cursor-pointer hover:scale-105 active:scale-95 ${
+                isLight ? 'bg-white shadow-xl text-black' : 'bg-white/10 text-white shadow-2xl'
+              }`}>
+                <div className="relative">
+                  <Lock size={42} strokeWidth={1.2} className={`${loading ? 'opacity-20' : 'opacity-100'} transition-opacity`} />
+                  {loading && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-10 h-10 border-[3px] border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-3 mb-12">
+              <h2 className={`text-[32px] font-semibold tracking-tight leading-tight ${isLight ? 'text-black' : 'text-white'}`}>
+                {error ? 'Try Again' : 'Security'}
+              </h2>
+              <p className={`text-[15px] font-medium tracking-tight opacity-40 ${isLight ? 'text-black' : 'text-white'}`}>
+                Passcode required for access
+              </p>
+            </div>
+
+            {/* Premium Input Styling */}
+            <div className="flex gap-3 justify-center mb-12">
+              {otp.map((data, index) => (
+                <div key={index} className="relative">
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength="1"
+                    ref={el => inputRefs.current[index] = el}
+                    value={data}
+                    onChange={e => handleChange(e.target, index)}
+                    onKeyDown={e => handleKeyDown(e, index)}
+                    className={`w-12 h-16 text-center text-3xl font-light rounded-2xl border transition-all duration-300 focus:outline-none ${
+                      isLight 
+                        ? 'bg-white/80 border-black/[0.05] text-black focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10' 
+                        : 'bg-white/5 border-white/[0.05] text-white focus:border-blue-500 focus:bg-white/10 focus:ring-4 focus:ring-blue-500/20'
+                    } ${data ? (isLight ? 'border-black/20' : 'border-white/20 scale-105') : ''} ${error ? 'border-rose-500/50' : ''}`}
+                  />
+                  {/* Subtle dot indicator if empty */}
+                  {!data && (
+                    <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full opacity-20 pointer-events-none ${isLight ? 'bg-black' : 'bg-white'}`} />
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="h-4">
+              {error && (
+                <p className="text-rose-500 text-[14px] font-medium tracking-tight">
+                  Incorrect passcode
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Footer info - Apple style minimal */}
+        <div className="mt-8 text-center space-y-4">
+          <p className={`text-[12px] font-semibold tracking-widest uppercase opacity-30 ${isLight ? 'text-black' : 'text-white'}`}>
+            Authorized Personnel Only
+          </p>
+          <div className={`w-32 h-1.5 rounded-full mx-auto opacity-10 ${isLight ? 'bg-black' : 'bg-white'}`} />
+        </div>
+      </div>
+
+      {/* Password Reset Modal */}
+      {isResetOpen && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+          <div className={`relative w-full max-w-md overflow-hidden rounded-[2.5rem] p-8 transition-all duration-500 ${
+            isLight ? 'bg-white text-black shadow-2xl' : 'bg-[#1c1c1e] text-white border border-white/10'
+          }`}>
+            <button 
+              onClick={() => setIsResetOpen(false)}
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/10 transition-colors"
+            >
+              <XCircle size={24} className="opacity-40" />
+            </button>
+
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-semibold mb-2">Reset Password</h3>
+              <p className="text-sm opacity-50">Enter secret and new 6-digit passcode</p>
+            </div>
+
+            <form onSubmit={handlePasswordReset} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-wider opacity-40 ml-4">Secret Code</label>
+                <input
+                  type="text"
+                  value={resetSecret}
+                  onChange={(e) => setResetSecret(e.target.value)}
+                  placeholder="Enter secret"
+                  className={`w-full h-14 px-6 rounded-2xl border transition-all duration-300 focus:outline-none ${
+                    isLight 
+                      ? 'bg-black/[0.03] border-black/[0.05] focus:border-blue-500' 
+                      : 'bg-white/[0.05] border-white/[0.05] focus:border-blue-500'
+                  }`}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-wider opacity-40 ml-4">New Passcode</label>
+                <input
+                  type="password"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength="6"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="6 digits"
+                  className={`w-full h-14 px-6 rounded-2xl border transition-all duration-300 focus:outline-none ${
+                    isLight 
+                      ? 'bg-black/[0.03] border-black/[0.05] focus:border-blue-500' 
+                      : 'bg-white/[0.05] border-white/[0.05] focus:border-blue-500'
+                  }`}
+                />
+              </div>
+
+              {resetError && (
+                <p className="text-rose-500 text-sm text-center font-medium">{resetError}</p>
+              )}
+
+              {resetSuccess && (
+                <div className="flex flex-col items-center justify-center space-y-2 text-emerald-500">
+                  <CheckCircle size={32} />
+                  <p className="text-sm font-medium">Password updated successfully</p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={resetLoading || resetSuccess}
+                className={`w-full h-14 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center ${
+                  resetLoading || resetSuccess
+                    ? 'bg-blue-500/50 cursor-not-allowed'
+                    : 'bg-blue-500 hover:bg-blue-600 active:scale-[0.98]'
+                } text-white`}
+              >
+                {resetLoading ? <Loader2 className="animate-spin" /> : 'Update Password'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-8px); }
+          75% { transform: translateX(8px); }
+        }
+      `}</style>
+    </div>
+  );
+};
 
 // MANUAL BRANDING: Edit this map to customize letters for each service
 const SERVICE_BRANDING = {
@@ -16,6 +320,12 @@ const SERVICE_BRANDING = {
   'quality' : 'QAD',
   'data' : 'D360',
   'uqe-H' : 'UQX',
+  'Cotton' : 'CTN',
+  'Corp' : 'CORP',
+  'Yahoo' : 'YHO',
+  'Master' : 'MSTR',
+  'Shiv-B' : 'SHV-B',
+  'Shiv-F' : 'SHV-F',
 };
 
 const apiClient = axios.create({
@@ -39,6 +349,8 @@ function App() {
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushLoading, setPushLoading] = useState(false);
 
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
   const checkSubscription = useCallback(async () => {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
     const registration = await navigator.serviceWorker.ready;
@@ -52,7 +364,7 @@ function App() {
 
   const urlBase64ToUint8Array = (base64String) => {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
     const rawData = window.atob(base64);
     const outputArray = new Uint8Array(rawData.length);
     for (let i = 0; i < rawData.length; ++i) {
@@ -115,7 +427,12 @@ function App() {
     try {
       setLoading(true);
       const response = await apiClient.get('/services');
-      const sortedServices = response.data.services.sort((a, b) => a.localeCompare(b));
+      const allServices = response.data.services;
+      
+      const pinned = ['Shiv-F', 'Shiv-B', 'Master'];
+      const otherServices = allServices.filter(s => !pinned.includes(s)).sort((a, b) => a.localeCompare(b));
+      const sortedServices = [...otherServices, ...pinned.filter(p => allServices.includes(p))];
+
       setServices(sortedServices);
       setStatus({ type: 'success', message: 'Services connected' });
       await fetchStatuses();
@@ -199,7 +516,7 @@ function App() {
   const handleRestartMaster = async () => {
     try {
       setStatus({ type: 'info', message: 'Triggering Master Backend restart...' });
-      await apiClient.post('/restart-master');
+      await apiClient.post('/restart/Corp');
       setStatus({ type: 'success', message: 'Master Backend restart triggered.' });
     } catch (error) {
       const errorMsg = error.response?.data?.error || error.message;
@@ -241,11 +558,17 @@ function App() {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 selection:bg-indigo-500/30 overflow-x-hidden font-sans ${
+    <div className={`min-h-screen relative transition-colors duration-500 selection:bg-indigo-500/30 overflow-x-hidden font-sans ${
       isLight ? 'bg-slate-50 text-slate-900' : 'bg-[#020205] text-slate-100'
     }`}>
+      {!isAuthenticated && (
+        <MobileLogin 
+          onAuthenticated={() => setIsAuthenticated(true)} 
+          isLight={isLight} 
+        />
+      )}
       {/* Top Navigation & Header */}
-      <div className="fixed top-8 left-0 right-0 z-50 flex flex-col items-center pointer-events-none">
+      <div className="absolute top-8 left-0 right-0 z-50 flex flex-col items-center pointer-events-none">
         <div className="w-full px-6 flex justify-between items-center pointer-events-auto">
           {/* Left Controls */}
           <div className="flex gap-3">
