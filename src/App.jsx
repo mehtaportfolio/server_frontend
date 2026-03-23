@@ -344,7 +344,11 @@ function App() {
   const [confirmRestart, setConfirmRestart] = useState(null); // { name, type: 'single' | 'all', action: 'restart' | 'redeploy' }
   const [activeTab, setActiveTab] = useState('restart');
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('theme') || 'blank';
+    try {
+      return localStorage.getItem('theme') || 'blank';
+    } catch (e) {
+      return 'blank';
+    }
   });
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushLoading, setPushLoading] = useState(false);
@@ -427,10 +431,10 @@ function App() {
     try {
       setLoading(true);
       const response = await apiClient.get('/services');
-      const allServices = response.data.services;
+      const allServices = response.data.services || [];
       
       const pinned = ['Shiv-F', 'Shiv-B', 'Master'];
-      const otherServices = allServices.filter(s => !pinned.includes(s)).sort((a, b) => a.localeCompare(b));
+      const otherServices = allServices.filter(s => s && !pinned.includes(s)).sort((a, b) => a.localeCompare(b));
       const sortedServices = [...otherServices, ...pinned.filter(p => allServices.includes(p))];
 
       setServices(sortedServices);
@@ -552,9 +556,9 @@ function App() {
 
   const stats = {
     total: services.length,
-    healthy: Object.values(statuses).filter(s => ['running', 'restarting'].includes(s.status)).length,
-    down: Object.values(statuses).filter(s => s.status === 'down').length,
-    restarting: Object.values(statuses).filter(s => s.status === 'restarting').length,
+    healthy: Object.values(statuses).filter(s => s && ['running', 'restarting'].includes(s.status)).length,
+    down: Object.values(statuses).filter(s => s && s.status === 'down').length,
+    restarting: Object.values(statuses).filter(s => s && s.status === 'restarting').length,
   };
 
   return (
