@@ -16,5 +16,5 @@ export const supabase = (supabaseUrl && supabaseAnonKey && supabaseUrl !== 'unde
         update: () => ({
           eq: () => Promise.resolve({ error: new Error('Supabase not configured') })
         })
-      }
+      })
     };
