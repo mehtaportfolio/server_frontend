@@ -6,42 +6,35 @@ import App from './App.jsx'
 
 let registration;
 
-try {
-  registerSW({
-    immediate: true,
-    onRegistered(r) {
-      registration = r;
-      if (r) {
-        // Check for updates every hour
-        setInterval(() => {
-          r.update();
-        }, 60 * 60 * 1000);
-      }
-    },
-    onNeedRefresh() {
-      if (confirm('New content available. Reload?')) {
-        window.location.reload();
-      }
+registerSW({
+  immediate: true,
+  onRegistered(r) {
+    registration = r;
+    if (r) {
+      // Check for updates every hour
+      setInterval(() => {
+        r.update();
+      }, 60 * 60 * 1000);
     }
-  })
-} catch (e) {
-  console.error('PWA registration failed:', e)
-}
+  },
+  onNeedRefresh() {
+    // This will only be called if registerType is 'prompt' in vite.config.js
+    // But keeping it as fallback
+    if (confirm('New content available. Reload?')) {
+      window.location.reload();
+    }
+  }
+})
 
-// Check for updates when the app becomes visible
+// Check for updates when the app becomes visible (e.g., when opening on mobile)
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && registration) {
     registration.update();
   }
 })
 
-const rootElement = document.getElementById('root');
-if (rootElement) {
-  createRoot(rootElement).render(
-    <StrictMode>
-      <App />
-    </StrictMode>,
-  )
-} else {
-  console.error('Root element not found');
-}
+createRoot(document.getElementById('root')).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+)
