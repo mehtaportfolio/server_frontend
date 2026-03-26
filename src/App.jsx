@@ -186,6 +186,7 @@ const MobileLogin = ({ onAuthenticated, isLight }) => {
                     value={data}
                     onChange={e => handleChange(e.target, index)}
                     onKeyDown={e => handleKeyDown(e, index)}
+                    style={{ WebkitTextSecurity: 'disc' }}
                     className={`w-12 h-16 text-center text-3xl font-light rounded-2xl border transition-all duration-300 focus:outline-none ${
                       isLight 
                         ? 'bg-white/80 border-black/[0.05] text-black focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10' 
@@ -263,6 +264,7 @@ const MobileLogin = ({ onAuthenticated, isLight }) => {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   placeholder="6 digits"
+                  style={{ WebkitTextSecurity: 'disc' }}
                   className={`w-full h-14 px-6 rounded-2xl border transition-all duration-300 focus:outline-none ${
                     isLight 
                       ? 'bg-black/[0.03] border-black/[0.05] focus:border-blue-500' 
