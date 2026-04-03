@@ -326,8 +326,8 @@ const SERVICE_BRANDING = {
   'Corp' : 'CORP',
   'Yahoo' : 'YHO',
   'Master' : 'MSTR',
-  'Shiv-B' : 'SHV-B',
-  'Shiv-F' : 'SHV-F',
+  'Indices' : 'NMI',
+
 };
 
 const apiClient = axios.create({
