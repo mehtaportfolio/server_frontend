@@ -132,7 +132,7 @@ const MobileLogin = ({ onAuthenticated, isLight }) => {
 
       <div className={`relative w-full max-w-[420px] transition-all duration-700 ${error ? 'animate-[shake_0.5s_ease-in-out]' : ''}`}>
         {/* Main Glass Card */}
-        <div className={`relative overflow-hidden rounded-[3.5rem] p-12 backdrop-blur-[40px] border transition-all duration-500 ${
+        <div className={`relative overflow-hidden rounded-[2.5rem] sm:rounded-[3.5rem] p-6 sm:p-12 backdrop-blur-[40px] border transition-all duration-500 ${
           isLight 
             ? 'bg-white/60 border-white/40 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.08)]' 
             : 'bg-[#1c1c1e]/60 border-white/10 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.6)]'
@@ -174,11 +174,11 @@ const MobileLogin = ({ onAuthenticated, isLight }) => {
             </div>
 
             {/* Premium Input Styling */}
-            <div className="flex gap-3 justify-center mb-12">
+            <div className="flex gap-2 sm:gap-3 justify-center mb-12">
               {otp.map((data, index) => (
                 <div key={index} className="relative">
                   <input
-                    type="password"
+                    type="text"
                     inputMode="numeric"
                     pattern="[0-9]*"
                     maxLength="1"
@@ -186,8 +186,8 @@ const MobileLogin = ({ onAuthenticated, isLight }) => {
                     value={data}
                     onChange={e => handleChange(e.target, index)}
                     onKeyDown={e => handleKeyDown(e, index)}
-                    style={{ WebkitTextSecurity: 'disc' }}
-                    className={`w-12 h-16 text-center text-3xl font-light rounded-2xl border transition-all duration-300 focus:outline-none ${
+                    style={{ WebkitTextSecurity: 'disc', MozTextSecurity: 'disc', textSecurity: 'disc' }}
+                    className={`w-10 h-14 sm:w-12 sm:h-16 text-center text-2xl sm:text-3xl font-light rounded-xl sm:rounded-2xl border transition-all duration-300 focus:outline-none ${
                       isLight 
                         ? 'bg-white/80 border-black/[0.05] text-black focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10' 
                         : 'bg-white/5 border-white/[0.05] text-white focus:border-blue-500 focus:bg-white/10 focus:ring-4 focus:ring-blue-500/20'
