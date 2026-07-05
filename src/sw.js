@@ -7,6 +7,15 @@ precacheAndRoute(self.__WB_MANIFEST)
 self.skipWaiting()
 clientsClaim()
 
+self.addEventListener('install', event => {
+  self.skipWaiting()
+  event.waitUntil(self.skipWaiting())
+})
+
+self.addEventListener('activate', event => {
+  event.waitUntil(self.clients.claim())
+})
+
 self.addEventListener('push', (event) => {
   const data = event.data.json()
   const options = {

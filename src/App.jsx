@@ -307,6 +307,7 @@ const SERVICE_BRANDING = {
   'Yahoo' : 'YHO',
   'Master' : 'MSTR',
   'Indices' : 'NMI',
+  'HVI' : 'HVI',
    'Backup' : 'BUS',
 
 };
@@ -314,7 +315,7 @@ const SERVICE_BRANDING = {
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
-    Authorization: `Bearer ${API_TOKEN}`,
+    Authorization: API_TOKEN ? `Bearer ${API_TOKEN}` : undefined,
   },
 });
 
